@@ -93,7 +93,54 @@
 ;             canv)))))
 ; (make-row grid 0 500 500 0 0)
 
+;;; flame animation code
+(define flame-parts
+  (lambda (width height color)
+    (path width height (list (pair (* width 0.5) (* height 0.1))  ; Top point
+      (pair (* width 0.3) (* height 0.4))
+      (pair (* width 0.2) (* height 0.6))
+      (pair (* width 0.25) (* height 0.8))
+      (pair (* width 0.4) (* height 0.9))
+      (pair (* width 0.5) (* height 0.95))
+      (pair (* width 0.6) (* height 0.9))
+      (pair (* width 0.75) (* height 0.8))
+      (pair (* width 0.8) (* height 0.6))
+      (pair (* width 0.7) (* height 0.4)))
+      "solid" color)))
 
+(define flame-part2
+  (lambda (width height)
+    (overlay/align "middle" "bottom"
+      (flame-parts (/ width 1.5) (/ height 1.5) "yellow")
+      (flame-parts width height "orange"))))
+
+(define flame
+  (lambda (width height)
+    (overlay/offset (* width -0.335) (* height -0.64)
+      (flame-parts (/ width 3) (/ height 3) "white")
+      (flame-part2 width height))))
+
+(define flame-canvas (make-canvas 150 150)) ; Smaller canvas size
+
+(define flame-animation
+  (lambda (time)
+    (let* ([base-size 80] ; Adjusted base size for the smaller canvas
+           [scale (+ 0.8 (* 0.2 (sin (/ time 250))))] ; Scale between 0.8 and 1.0
+           [shake-x (truncate (* 3 (sin (/ time 50))))] ; Convert to integer
+           [shake-y (truncate (* 2 (cos (/ time 70))))] ; Convert to integer
+           [flame-width (* base-size scale)]
+           [flame-height (* base-size scale)]
+           [flame (flame flame-width flame-height)])
+      (begin
+        ;; Clear canvas
+        (canvas-rectangle! flame-canvas 0 0 150 150 "solid" "white")
+        ;; Draw the animated flame at the center of the canvas
+        (canvas-drawing! flame-canvas 
+          (+ 75 shake-x) (+ 75 shake-y) flame) ; Center flame at (75, 75)
+        #t)))) ; Return #t to allow animation to continue
+
+;; Start the animation
+(ignore (animate-with flame-animation))
 
 ;The code below works
 (part "A reactive grid of pegs")
