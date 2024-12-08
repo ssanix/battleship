@@ -1,0 +1,194 @@
+(import image)
+(import canvas)
+(import reactive)
+(import lab)
+
+(define make-ships
+  (lambda (size)
+    (let* ([ship-base (solid-rectangle size 50 "green")]
+           [ship-edge (solid-triangle 50 "green")])
+      (beside (rotate -90 ship-edge) 
+              ship-base 
+              (rotate 90 ship-edge)))))
+
+(define image->canvas
+  (lambda (img)
+    (let* ([width (image-width img)]
+           [height (image-height img)]
+           [canvas (make-canvas (round width) (round height))])
+      (begin (canvas-drawing! canvas 0 0 img)
+             canvas))))
+
+(define make-ship
+  (lambda (size)
+    (image->canvas (make-ships size))))
+
+; (square-piece size) -> drawing?
+;    size : integer? size > 0
+; Returns a solid, grey square of size 'size' with a black circle 
+; of radius 'size/5' overlayed on top of it
+(define square-piece
+  (lambda (size)
+    (overlay/align "middle" "center"
+                    (circle (/ size 5) "solid" "black") 
+                    (square size "outline" "black")
+                    (square size "solid" "gray"))))
+
+; Ship definition struct
+(struct ship (size orientation placed-indices))
+
+; Initial ships to be placed
+(define ships-to-place 
+  (list 
+    (ship 5 "vertical" '())
+    (ship 4 "horizontal" '())
+    (ship 4 "horizontal" '())
+    (ship 3 "horizontal" '())
+    (ship 6 "horizontal" '())))
+
+; Initial game state
+(struct state 
+  (current-ship ships-to-place grid-state))
+
+; Check if a ship placement is valid
+(define is-valid-placement?
+  (lambda (grid-state ship grid-index orientation)
+    (let* ([ship-size (ship-size ship)]
+           ; Determine the range of indices based on orientation
+           [max-indices 
+             (if (equal? orientation "horizontal")
+                 ; Horizontal check: ensure ship stays within same row
+                 (let* ([row-start (* (truncate (/ grid-index 10)) 10)]
+                        [row-end (+ row-start 9)])
+                   (filter 
+                    (lambda (idx) 
+                      (and (>= idx row-start) 
+                           (<= idx row-end)
+                           (< idx 100)
+                           (not (vector-ref grid-state idx))))
+                    (range grid-index (+ grid-index ship-size))))
+                 ; Vertical check: ensure ship stays within grid
+                 (filter 
+                  (lambda (idx) 
+                    (and (< idx 100)
+                         (not (vector-ref grid-state idx))))
+                  (range grid-index (+ grid-index (* ship-size 10)) 10)))]
+           ; Check if we have enough indices and no overlap
+           [valid-placement (= (length max-indices) ship-size)])
+      valid-placement)))
+
+; Place ship on grid
+(define place-ship
+  (lambda (grid-state ship grid-index orientation)
+    (let* ([ship-size (ship-size ship)]
+           [max-indices 
+             (if (equal? orientation "horizontal")
+                 ; Horizontal placement
+                 (let* ([row-start (* (truncate (/ grid-index 10)) 10)]
+                        [row-end (+ row-start 9)])
+                   (filter 
+                    (lambda (idx) 
+                      (and (>= idx row-start) 
+                           (<= idx row-end)
+                           (< idx 100)))
+                    (range grid-index (+ grid-index ship-size))))
+                 ; Vertical placement
+                 (filter 
+                  (lambda (idx) (< idx 100))
+                  (range grid-index (+ grid-index (* ship-size 10)) 10)))])
+      ; If placement is valid, mark indices as occupied
+      (if (is-valid-placement? grid-state ship grid-index orientation)
+          (begin 
+            (vector-for-each 
+             (lambda (idx) 
+               (vector-set! grid-state idx #t)) 
+             (list->vector max-indices))
+            grid-state)
+          ; If placement is invalid, return original grid state
+          grid-state))))
+
+(define view
+  (lambda (st canvas)
+    (match st
+      [(state current-ship ships-to-place grid-state)
+       (begin (grid-maker st canvas 0 0)
+              (if (not (null? ships-to-place))
+                  (let* ([ship (car ships-to-place)]
+                         [ship-image (make-ship 
+                                      (* 50 (ship-size ship)))]
+                         [placement-text 
+                          (string-append 
+                           "Place " 
+                           (number->string (ship-size ship)) 
+                           "-grid " 
+                           (ship-orientation ship) 
+                           " ship")])
+                    (canvas-text! canvas 10 20 placement-text 16 "solid" "black"))
+                  st))])))
+
+; Update function for ship placement with validation
+(define update
+  (lambda (msg st)
+    (match st
+      [(state current-ship ships-to-place grid-state)
+       (match msg
+         [(event-mouse-click btn cx cy)
+          ; Check if there are ships to place
+          (if (not (null? ships-to-place))
+              (let* ([grid-x (truncate (/ (- cx 10) 50))]
+                     [grid-y (truncate (/ (- cy 10) 50))]
+                     [grid-index (+ grid-x (* grid-y 10))]
+                     [current-ship (car ships-to-place)]
+                     [orientation (ship-orientation current-ship)])
+                ; Attempt to place the ship
+                (if (is-valid-placement? grid-state current-ship grid-index orientation)
+                    ; Valid placement: update the grid and move to next ship
+                    (let* ([updated-grid (place-ship grid-state current-ship grid-index orientation)]
+                           [updated-ships (cdr ships-to-place)])
+                      (if (null? updated-ships)
+                          ; All ships placed, transition to next game phase
+                          (state #f '() updated-grid)
+                          ; Continue with next ship
+                          (state (car updated-ships) updated-ships updated-grid)))
+                    ; Invalid placement: state remains unchanged
+                    st))
+              ; All ships placed, do nothing
+              st)]
+         [else st])])))
+
+; Grid maker function
+(define grid-maker
+  (lambda (st canvas i k)
+    (if (equal? k 500)
+        null
+        (begin 
+          (canvas-drawing! canvas i k 
+            ; If grid is occupied, draw a marker
+            (if (vector-ref (state-grid-state st) (+ (* (/ k 50) 10) (/ i 50)))
+                (solid-square 50 "green")
+                (square-piece 50)))
+          (if (< i 450)
+              (grid-maker st canvas (+ i 50) k)
+              (grid-maker st canvas 0 (+ k 50)))))))
+
+; Display canvas with initial state
+(display
+  (reactive-canvas
+    600 600
+    ; Initial model: first ship to place, full list of ships, empty grid
+    (state #f ships-to-place (make-vector 100 #f))
+    ; View function
+    view
+    ; Update function
+    update
+    ; Subscriptions
+    (on-mouse-click)
+    (on-key-up)))
+
+(problem "Battleship Ship Placement
+- Click to place ships of different sizes
+- Ships cannot overlap or go out of grid bounds
+- Ships will be placed in order: 5-grid, 4-grid, 4-grid, 3-grid, 6-grid
+- Click carefully to align ships on the grid
+- If placement is invalid, the ship will not be placed
+- Once all ships are placed, the grid will be ready")
