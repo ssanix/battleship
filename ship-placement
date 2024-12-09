@@ -126,12 +126,44 @@
                     (canvas-text! canvas 10 20 placement-text 16 "solid" "black"))
                   st))])))
 
+; Change ship orientation function
+(define change-orientation
+  (lambda (msg st)
+    (match st
+      [(state current-ship ships-to-place grid-state)
+       (match msg
+         [(event-key-up key)
+          ; Check if 'c' key is pressed and there are ships to place
+          (if (and (equal? key "c") (not (null? ships-to-place)))
+              ; Toggle orientation of the current ship
+              (let* ([current-ship (car ships-to-place)]
+                     [new-orientation 
+                      (if (equal? (ship-orientation current-ship) "horizontal")
+                          "vertical"
+                          "horizontal")]
+                     [updated-ship (ship 
+                                    (ship-size current-ship) 
+                                    new-orientation 
+                                    (ship-placed-indices current-ship))]
+                     [updated-ships (cons updated-ship (cdr ships-to-place))])
+                (state current-ship updated-ships grid-state))
+              ; If 'c' key is not pressed or no ships to place, return unchanged state
+              st)]
+         [else st])])))
+
 ; Update function for ship placement with validation
 (define update
   (lambda (msg st)
     (match st
       [(state current-ship ships-to-place grid-state)
        (match msg
+         [(event-key-up key)
+          ; Check if 'c' key is pressed and there are ships to place
+          (if (and (equal? key "c") (not (null? ships-to-place)))
+              ; Call the change-orientation function to toggle orientation
+              (change-orientation msg st)
+              ; If 'c' key is not pressed or no ships to place, return unchanged state
+              st)]
          [(event-mouse-click btn cx cy)
           ; Check if there are ships to place
           (if (not (null? ships-to-place))
@@ -140,18 +172,23 @@
                      [grid-index (+ grid-x (* grid-y 10))]
                      [current-ship (car ships-to-place)]
                      [orientation (ship-orientation current-ship)])
-                ; Attempt to place the ship
-                (if (is-valid-placement? grid-state current-ship grid-index orientation)
-                    ; Valid placement: update the grid and move to next ship
-                    (let* ([updated-grid (place-ship grid-state current-ship grid-index orientation)]
-                           [updated-ships (cdr ships-to-place)])
-                      (if (null? updated-ships)
-                          ; All ships placed, transition to next game phase
-                          (state #f '() updated-grid)
-                          ; Continue with next ship
-                          (state (car updated-ships) updated-ships updated-grid)))
-                    ; Invalid placement: state remains unchanged
-                    st))
+                
+                ; Call the change-orientation function before placing the ship
+                (let* ([updated-st (change-orientation '() st)]  ; Pass empty message to update the orientation
+                       [updated-ship (car (state-ships-to-place updated-st))]
+                       [updated-orientation (ship-orientation updated-ship)])
+                  ; Attempt to place the ship using the updated orientation
+                  (if (is-valid-placement? grid-state current-ship grid-index updated-orientation)
+                      ; Valid placement: update the grid and move to next ship
+                      (let* ([updated-grid (place-ship grid-state current-ship grid-index updated-orientation)]
+                             [updated-ships (cdr (state-ships-to-place updated-st))])
+                        (if (null? updated-ships)
+                            ; All ships placed, transition to next game phase
+                            (state #f '() updated-grid)
+                            ; Continue with next ship
+                            (state (car updated-ships) updated-ships updated-grid)))
+                      ; Invalid placement: state remains unchanged
+                      st)))
               ; All ships placed, do nothing
               st)]
          [else st])])))
