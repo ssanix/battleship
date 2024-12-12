@@ -1,0 +1,387 @@
+; test2almost-done
+(import music)
+(import image)
+(import canvas)
+(import reactive)
+(import lab)
+
+;|||||||||||||||||||||||||||||||||||||||||||
+;              Sound
+(define beat-dur qn)
+
+(struct Note (Midi Dur))
+
+(struct Rest (Dur))
+
+(define pitch!
+  (lambda (Midi Accidental)
+    (cond
+      [(equal? Accidental "Flat") (- Midi 1)]
+      [(equal? Accidental "Natural") Midi]
+      [(equal? Accidental "Sharp") (+ Midi 1)])))
+
+(define A2 (lambda (Accidental Dur) (Note (pitch! 45 Accidental) Dur)))
+
+(define B2 (lambda (Accidental Dur) (Note (pitch! 47 Accidental) Dur)))
+
+(define C3 (lambda (Accidental Dur) (Note (pitch! 48 Accidental) Dur)))
+
+(define D3 (lambda (Accidental Dur) (Note (pitch! 50 Accidental) Dur)))
+
+(define E3 (lambda (Accidental Dur) (Note (pitch! 52 Accidental) Dur)))
+
+(define F3 (lambda (Accidental Dur) (Note (pitch! 53 Accidental) Dur)))
+
+(define G3 (lambda (Accidental Dur) (Note (pitch! 55 Accidental) Dur)))
+
+(define A3 (lambda (Accidental Dur) (Note (pitch! 57 Accidental) Dur)))
+
+(define B3 (lambda (Accidental Dur) (Note (pitch! 59 Accidental) Dur)))
+
+(define C4 (lambda (Accidental Dur) (Note (pitch! 60 Accidental) Dur)))
+
+(define D4 (lambda (Accidental Dur) (Note (pitch! 62 Accidental) Dur)))
+
+(define E4 (lambda (Accidental Dur) (Note (pitch! 64 Accidental) Dur)))
+
+(define F4 (lambda (Accidental Dur) (Note (pitch! 65 Accidental) Dur)))
+
+(define G4 (lambda (Accidental Dur) (Note (pitch! 67 Accidental) Dur)))
+
+(define A4 (lambda (Accidental Dur) (Note (pitch! 69 Accidental) Dur)))
+
+(define B4 (lambda (Accidental Dur) (Note (pitch! 71 Accidental) Dur)))
+
+(define C5 (lambda (Accidental Dur) (Note (pitch! 72 Accidental) Dur)))
+
+(define D5 (lambda (Accidental Dur) (Note (pitch! 74 Accidental) Dur)))
+
+(define E5 (lambda (Accidental Dur) (Note (pitch! 76 Accidental) Dur)))
+
+(define A2-voice (list (Rest (dur 5 1)) (A2 "Natural" wn)))
+
+(define B2-voice (list (Rest (dur 9 2)) (B2 "Natural" hn) (Rest wn)))
+
+(define C3-voice (list (Rest (dur 4 1)) (C3 "Natural" hn) (Rest (dur 3 2))))
+
+(define D3-voice (list (Rest (dur 7 2)) (D3 "Natural" hn) (Rest (dur 2 1))))
+
+(define E3-voice (list (Rest wn) (E3 "Natural" wn) (E3 "Natural" wn) (E3 "Natural" hn) (Rest (dur 3 2))
+                       (E3 "Natural" wn)))
+
+(define F3-voice (list (Rest (dur 9 2)) (F3 "Sharp" hn) (Rest wn)))
+
+(define G3-voice (list (Rest wn) (G3 "Natural" wn) (G3 "Natural" wn) (G3 "Natural" hn) (G3 "Natural" hn)
+                       (G3 "Natural" hn) (Rest (dur 3 2))))
+
+(define A3-voice (list (Rest (dur 6 1))))
+
+(define B3-voice (list (Rest (dur 5 8)) (B3 "Natural" en) (Rest (dur 7 8)) (B3 "Natural" en) (Rest (dur 7 8))
+                       (B3 "Natural" en) (Rest qn) (B3 "Natural" hn) (B3 "Natural" hn) (B3 "Natural" hn)
+                       (Rest (dur 3 2))))
+
+(define C4-voice (list (Rest (dur 6 1))))
+
+(define D4-voice (list (Rest (dur 6 1))))
+
+(define E4-voice (list (Rest (dur 6 8)) (E4 "Natural" en) (Rest qn) (E4 "Natural" hn) (Rest en) (E4 "Natural" en)
+                       (Rest qn) (E4 "Natural" hn) (Rest en) (E4 "Natural" en) (Rest hn) (E4 "Natural" en)
+                       (Rest (dur 3 8)) (E4 "Natural" en) (Rest (dur 2 1))))
+
+(define F4-voice (list (Rest (dur 7 8)) (F4 "Sharp" en) (Rest (dur 7 8)) (F4 "Sharp" en) (Rest (dur 7 8))
+                       (F4 "Sharp" en) (Rest qn) (F4 "Sharp" en) (Rest (dur 3 8)) (F4 "Sharp" en)
+                       (Rest (dur 17 8))))
+
+(define G4-voice (list (Rest wn) (G4 "Natural" en) (Rest (dur 7 8)) (G4 "Natural" en) (Rest (dur 7 8))
+                       (G4 "Natural" qn) (Rest qn) (G4 "Natural" qn) (Rest (dur 9 4))))
+
+(define A4-voice (list (Rest (dur 19 4)) (A4 "Natural" en) (Rest wn) (A4 "Natural" en)))
+
+(define B4-voice (list (Rest (dur 4 1)) (B4 "Natural" qn) (B4 "Natural" qn) (B4 "Natural" en) (B4 "Natural" en)
+                       (Rest en) (B4 "Natural" en) (Rest (dur 3 4)) (B4 "Natural" en) (Rest en)))
+
+(define C5-voice (list (Rest (dur 5 1)) (C5 "Natural" en) (C5 "Natural" hn) (C5 "Natural" en) (Rest qn)))
+
+(define D5-voice (list (Rest (dur 6 1))))
+
+(define E5-voice (list (Rest (dur 6 1))))
+
+(composition? E5)
+
+(define dur-scale
+  (lambda (dur-1 scalar)
+    (let ([num-1 (numerator dur-1)]
+          [den-1 (denominator dur-1)])
+      (dur (* num-1 scalar) den-1))))
+
+(define dur-ratio
+  (lambda (dur-1 dur-2)
+    (let ([num-1 (numerator dur-1)]
+          [den-1 (denominator dur-1)]
+          [num-2 (numerator dur-2)]
+          [den-2 (denominator dur-2)])
+      (/ (/ num-1 den-1) (/ num-2 den-2)))))
+
+(define note-rest-length
+  (lambda (note-rest)
+    (let* ([fps 60]
+           [spm 60]
+           [fpm (* fps spm)]
+           [fpb (/ fpm bpm)])
+      (cond
+        [(Note? note-rest) (* fpb (dur-ratio (Note-Dur note-rest) beat-dur))]
+        [(Rest? note-rest) (* fpb (dur-ratio (Rest-Dur note-rest) beat-dur))]))))
+
+(define voice-length
+  (lambda (voice)
+    (apply + (map note-rest-length voice))))
+
+(define play-note-rest
+  (lambda (note-rest)
+    (cond
+      [(Note? note-rest) (note (Note-Midi note-rest) (Note-Dur note-rest))]
+      [(Rest? note-rest) (rest (Rest-Dur note-rest))])))
+
+(define play-voice
+  (lambda (voice)
+    (apply seq (map play-note-rest voice))))
+
+(define play-sheet
+  (lambda (sheet)
+    (mod (tempo beat-dur 120) (apply par (map play-voice sheet)))))
+
+(define melody2 (list A2-voice B4-voice A4-voice F4-voice C5-voice E3-voice G4-voice E4-voice A4-voice
+  B4-voice D3-voice E3-voice G3-voice F3-voice E3-voice D3-voice C3-voice B2-voice A2-voice C4-voice
+  D4-voice E4-voice F4-voice G4-voice E5-voice A4-voice B4-voice C5-voice D5-voice B3-voice E4-voice
+  G3-voice C4-voice A4-voice D3-voice F3-voice C3-voice E4-voice G4-voice A4-voice F4-voice E3-voice
+  G4-voice C5-voice D5-voice A2-voice B3-voice E5-voice F4-voice G4-voice B2-voice A4-voice C4-voice
+  D4-voice G3-voice B4-voice F3-voice E4-voice D5-voice E5-voice E5-voice G4-voice C5-voice))
+
+(play-sheet melody2)
+
+;                 Sound
+;|||||||||||||||||||||||||||||||||||||||||||
+
+(define white-peg
+  (overlay
+    (circle 10 "outline" "black")
+    (circle 10 "solid" "white")))
+
+(define red-peg
+  (begin
+  (play-composition (seq (note 40 sn) (note 40 sn) (note 40 sn) (note 40 qn) (note 40 qn) (note 40 sn) (note 40 sn) (note 40 sn) (note 40 qn) (note 40 qn)))
+  (overlay
+    (circle 10 "outline" "black")
+    (circle 10 "solid" "red"))))
+ 
+(define flame-parts
+  (lambda (width height color)
+    (path width height (list (pair (* width 0.5) (* height 0.1))  ; Top point
+      (pair (* width 0.3) (* height 0.4))
+      (pair (* width 0.2) (* height 0.6))
+      (pair (* width 0.25) (* height 0.8))
+      (pair (* width 0.4) (* height 0.9))
+      (pair (* width 0.5) (* height 0.95))
+      (pair (* width 0.6) (* height 0.9))
+      (pair (* width 0.75) (* height 0.8))
+      (pair (* width 0.8) (* height 0.6))
+      (pair (* width 0.7) (* height 0.4)))
+      "solid" color)))
+
+(define flame-part2
+  (lambda (width height)
+    (overlay/align "middle" "bottom"
+      (flame-parts (/ width 1.5) (/ height 1.5) "yellow")
+     (flame-parts width height "orange"))))
+
+(define flame
+  (lambda (width height)
+    (overlay/offset (* width -0.335) (* height -0.64)
+      (flame-parts (/ width 3) (/ height 3) "white")
+      (flame-part2 width height))))
+
+; Ship sizes: Carrier (5), Battleship (4), Cruiser (3), Submarine (3), Destroyer (2)
+(define ship-sizes (list 5 4 3 3 2))
+
+(define square-piece
+  (lambda (size)
+    (overlay/align "middle" "center"
+                    (circle (/ size 5) "solid" "black")
+                    (square size "outline" "black")
+                    (square size "solid" "gray"))))
+
+(define is-valid-ship-placement?
+  (lambda (clicked-index ship-length turns griddy)
+    (let* ([row (quotient clicked-index 10)]
+           [col (remainder clicked-index 10)]
+           [max-col (- 10 ship-length)])
+      (and (>= clicked-index 0) (< clicked-index 100)
+           (<= col max-col) (cond
+                              [(= i ship-length) #t]
+                              [(not (equal? (vector-ref griddy (+ clicked-index i)) 1)) #f]
+                              [else (i 0 (+ i 1))])))))
+
+(define grid-vec
+  (lambda (vec i griddy)
+    (if (>= i (vector-length vec))
+      void
+      (begin
+        (let* ([ship-grid (overlay (solid-circle 15 "black")
+                                 (solid-square 50 "green"))])
+      (if (equal? (vector-ref griddy i) 1); water
+          (vector-set! vec i (square-piece 50))
+      (if (equal? (vector-ref griddy i) -100) ;sunk no peg
+          (vector-set! vec i (overlay (flame 40 40) (overlay ship-grid (square-piece 50))));
+      (if (< (vector-ref griddy i) -100); sunk pegs
+          (if (equal? (vector-ref griddy i) -300)
+              (vector-set! vec i (overlay white-peg (flame 40 40) (overlay ship-grid (square-piece 50)))) ; sunk white peg
+              (vector-set! vec i (overlay red-peg (flame 40 40) (overlay ship-grid (square-piece 50))))); sunk red peg
+          (if (negative? (vector-ref griddy i));ships
+          (if (equal? (vector-ref griddy i) -2)
+              (vector-set! vec i (overlay red-peg (overlay ship-grid (square-piece 50)))) ;red peg with ship
+              (if (equal? (vector-ref griddy i) -3)
+                  (vector-set! vec i (overlay white-peg (overlay ship-grid (square-piece 50))));white peg with ship
+                  (vector-set! vec i (overlay ship-grid (square-piece 50))))) ;ship
+          (if (odd? (vector-ref griddy i)) ;pegs
+              (vector-set! vec i (overlay white-peg (square-piece 50))) ;white peg
+              (vector-set! vec i (overlay red-peg (square-piece 50))))))))); red peg
+      (grid-vec vec (+ i 1) griddy)
+      vec))))
+
+(define grid0 (make-vector 100 1))
+(define grid1 (make-vector 100 1))
+
+(define grid
+  (grid-vec grid0 0))
+
+;initial model struct
+(struct state (peg x y griddy-p1 griddy-p2 turns ships-p1 ships-p2))
+
+(define grid-maker
+  (lambda (st canvass i k j vec ships turns)
+    (if (equal? k 500)
+      null
+      (begin (canvas-drawing! canvass i k (vector-ref vec j))
+       (canvas-text! canvass 10 30
+         (if (null? ships) 
+             "" 
+             (string-append "Place " (number->string (car ships)) "-grid horizontal ship")) 30 "solid" "yellow")
+       (canvas-text! canvass 100 100 (string-append "ships: " (number->string (length ships))) 30 "solid" "white")
+       (canvas-text! canvass 300 100 (string-append "player " (number->string turns)) 30 "solid" "white")
+       (if (< i 450)
+           (grid-maker st canvass (+ i 50) k (+ j 1) vec ships turns)
+           (grid-maker st canvass 0 (+ k 50) (+ j 1) vec ships turns))))))
+ 
+; view function
+(define view
+  (lambda (st canvass)
+    (match st
+      [(state peg x y griddy-p1 griddy-p2 turns ships-p1 ships-p2)
+        (begin
+          (ignore
+            (begin
+          ;;; This is purposefully low-level for testing
+            (if (negative? turns)
+            (grid-maker st canvass 0 0 0 (grid-vec (make-vector 100 0) 0 griddy-p1) ships-p1 turns)
+            (grid-maker st canvass 0 0 0 (grid-vec (make-vector 100 0) 0 griddy-p2) ships-p2 turns)
+              ))))])))
+
+(define canv (make-canvas 500 500))
+
+(define confetti
+  (let* ([animation (ignore
+                      (animate-with
+                        (lambda (time)
+                          (let* ([pos (remainder (round time) 1000)]
+                                 [pos1 (remainder (round time) 1500)]
+                                 [pos2 (remainder (round time) 1600)]
+                                 [pos3 (remainder (round time) 1700)]
+                                 [pos4 (remainder (round time) 1800)])
+                          (begin
+                          (play-sheet (list A4-voice B4-voice C5-voice D5-voice E5-voice))
+                            (canvas-rectangle! canv 0 0 1000 1000 "solid" "white")
+                            (canvas-circle! canv 30 (+ 40 pos) 20 "solid" "green")
+                            (canvas-circle! canv 30 (+ 40 pos1) 20 "solid" "green")
+                              (canvas-circle! canv 30 (+ 40 pos2) 20 "solid" "green")
+                           (canvas-circle! canv 30 (+ 40 pos3) 20 "solid" "green")
+                           (canvas-circle! canv 30 (+ 40 pos4) 20 "solid" "green")
+                            (canvas-circle! canv 70 (+ 80 pos) 20 "solid" "purple")
+                          (canvas-circle! canv 70 (+ 80 pos1) 20 "solid" "purple")
+                          (canvas-circle! canv 70 (+ 80 pos2) 20 "solid" "purple")
+                          (canvas-circle! canv 70 (+ 80 pos3) 20 "solid" "purple")
+                          (canvas-circle! canv 70 (+ 80 pos4) 20 "solid" "purple")
+                            (canvas-circle! canv 110 (+ 180 pos) 20 "solid" "pink")
+                           (canvas-circle! canv 110 (+ 180 pos1) 20 "solid" "pink")
+                           (canvas-circle! canv 110 (+ 180 pos2) 20 "solid" "pink")
+                           (canvas-circle! canv 110 (+ 180 pos3) 20 "solid" "pink")
+                          (canvas-circle! canv 110 (+ 180 pos4) 20 "solid" "pink")
+                             (canvas-circle! canv 150 pos 20 "solid" "red")
+                          (canvas-circle! canv 150 pos1 20 "solid" "red")
+                          (canvas-circle! canv 150 pos2 20 "solid" "red")
+                          (canvas-circle! canv 150 pos3 20 "solid" "red")
+                           (canvas-circle! canv 150 pos4 20 "solid" "red")
+                            #t)))))])
+     (begin animation
+            canv)))
+
+(define update
+  (lambda (msg st)
+    (match st
+      [(state peg x y griddy-p1 griddy-p2 turns ships-p1 ships-p2)
+        (match msg
+          [(event-mouse-click btn cx cy) (begin (play-composition (note 69 sn))
+; animation not working yet
+         (let* ([red-pegs-p1 (filter (lambda (cell) (> cell 100)) (vector->list griddy-p1))]
+                [red-pegs-p2 (filter (lambda (cell) (> cell 100)) (vector->list griddy-p2))])
+           (if (or (>= (length red-pegs-p1) 17) (>= (length red-pegs-p2) 17))
+               confetti
+      (if (or (not (null? ships-p1)) (not (null? ships-p2)))
+        (if (negative? turns)
+          (let* ([clicked-index (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))]
+                 [current-ship-length (car ships-p1)]
+                 [indices (make-vector current-ship-length 0)]
+                 [a (vector-for-each 
+                     (lambda (i) 
+                       (vector-set! griddy-p1 (+ clicked-index i) -1)) 
+                     (vector-range current-ship-length))])
+              (state peg x y griddy-p1 griddy-p2 (* turns -1) (cdr ships-p1) ships-p2))
+          (let* ([clicked-index (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))]
+                 [current-ship-length (car ships-p2)]
+                 [indices (make-vector current-ship-length 0)]
+                 [a (vector-for-each 
+                     (lambda (i) 
+                       (vector-set! griddy-p2 (+ clicked-index i) -1)) 
+                     (vector-range current-ship-length))])
+              (state peg x y griddy-p1 griddy-p2 (* turns -1) ships-p1 (cdr ships-p2))))
+           (if (negative? turns)
+             (if (negative? (vector-ref griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))))              
+            (let* ([a (vector-set! griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50)))) (* (vector-ref griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))) 2))];set peg on grid 1 to red
+                   [b (vector-set! griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50)))) (* (vector-ref griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))) 100))]); set ship to hit on grid 2
+              (state peg x y griddy-p1 griddy-p2 (* turns -1) ships-p1 ships-p2))
+               (let* ([a (vector-set! griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50)))) (* (vector-ref griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))) 3))]);set peg on grid 1 to white
+              (state peg x y griddy-p1 griddy-p2 (* turns -1) ships-p1 ships-p2)))
+            (if (negative? (vector-ref griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))))       
+            (let* ([a (vector-set! griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50)))) (* (vector-ref griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))) 2))];set peg on grid 2 to red
+                   [b (vector-set! griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50)))) (* (vector-ref griddy-p1 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))) 100))]);set ship to hit on grid 1
+              (state peg x y griddy-p1 griddy-p2 (* turns -1) ships-p1 ships-p2))
+              (let* ([a (vector-set! griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50)))) (* (vector-ref griddy-p2 (truncate (+ (* (truncate (/ cy 50)) 10) (truncate (/ cx 50))))) 3))]); set peg on grid 2 to white
+              (state peg x y griddy-p1 griddy-p2 (* turns -1) ships-p1 ships-p2))))
+        ))))]
+    )])))
+
+(display
+  (reactive-canvas
+    500 500
+    ;initial model
+      (state (circle 10 "solid" "black") 15 15 grid0 grid1 1 ship-sizes ship-sizes)
+    ;view function
+      view
+    ;update fucntion
+      update
+    ;subscriptions
+    (on-mouse-click)))
+
+(problem "Click anywhere on the canvas to place the peg.
+  \n Tip: You have to click exactly in the middle of the
+          black circle to place the red/white peg accurately.
+  \n Tip: The first click makes a red peg, click a second time to place a white peg on the grid")
