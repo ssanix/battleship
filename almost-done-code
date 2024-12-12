@@ -168,6 +168,7 @@
       [(state peg x y griddy-p1 griddy-p2 turns ships-p1 ships-p2)
         (match msg
           [(event-mouse-click btn cx cy)
+; animation not working yet
          (let* ([red-pegs-p1 (filter (lambda (cell) (> cell 100)) (vector->list griddy-p1))]
                 [red-pegs-p2 (filter (lambda (cell) (> cell 100)) (vector->list griddy-p2))])
            (if (or (>= (length red-pegs-p1) 17) (>= (length red-pegs-p2) 17))
